@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>A.mar Carmen — Panel de Control Unificado</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0b0f19;
+      --card: #151d2a;
+      --border: #263346;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --coral: #ff385c;
+      --emerald: #10b981;
+      --blue: #3b82f6;
+      --amber: #f59e0b;
+      --purple: #a855f7;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
+    body { background: var(--bg); color: var(--text); padding: 1.5rem; min-height: 100vh; }
+    .container { max-width: 1200px; margin: 0 auto; }
+    
+    /* Top Main Module Selector */
+    .module-selector {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 2rem;
+    }
+    .mod-btn {
+      background: var(--card); border: 2px solid var(--border); border-radius: 16px; padding: 1.25rem;
+      color: var(--muted); cursor: pointer; text-align: left; transition: all 0.2s ease;
+    }
+    .mod-btn:hover { border-color: var(--amber); }
+    .mod-btn.active-host {
+      background: linear-gradient(135deg, #21262d, #161b22);
+      border-color: #f59e0b; color: #f59e0b; box-shadow: 0 4px 20px rgba(245, 158, 11, 0.15);
+    }
+    .mod-btn.active-revenue {
+      background: linear-gradient(135deg, #1e293b, #0f172a);
+      border-color: var(--coral); color: var(--coral); box-shadow: 0 4px 20px rgba(255, 56, 92, 0.15);
+    }
+    .mod-title { font-size: 1.1rem; font-weight: 800; margin-bottom: 0.25rem; display: flex; align-items: center; gap: 0.5rem; }
+    .mod-desc { font-size: 0.8rem; color: var(--muted); font-weight: 500; }
+    
+    header {
+      background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 1.25rem 1.75rem;
+      margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;
+    }
+    .brand h1 { font-size: 1.35rem; font-weight: 800; }
+    .brand p { color: var(--muted); font-size: 0.85rem; }
+    .badge { padding: 0.4rem 0.8rem; border-radius: 9999px; font-weight: 700; font-size: 0.8rem; }
+    
+    .nav-tabs { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; overflow-x: auto; padding-bottom: 0.5rem; }
+    .tab { background: var(--card); border: 1px solid var(--border); color: var(--muted); padding: 0.65rem 1.1rem; border-radius: 10px; font-weight: 700; font-size: 0.85rem; cursor: pointer; white-space: nowrap; }
+    .tab.active-host { background: #d97706; color: white; border-color: #f59e0b; }
+    .tab.active-revenue { background: var(--coral); color: white; border-color: var(--coral); }
+    
+    .module-content { display: none; }
+    .module-content.active { display: block; }
+    
+    .section { display: none; }
+    .section.active { display: block; }
+    
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem; margin-bottom: 1.5rem; }
+    .card h3 { font-size: 1.05rem; font-weight: 700; margin-bottom: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; }
+    
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 1rem; }
+    .stat-box { background: rgba(255,255,255,0.025); border: 1px solid var(--border); border-radius: 12px; padding: 1.1rem; text-align: center; }
+    .stat-val { font-size: 1.4rem; font-weight: 800; margin-top: 0.3rem; }
+    
+    .template-box { background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: 12px; padding: 1.2rem; margin-bottom: 1rem; }
+    .template-box h4 { font-size: 0.95rem; font-weight: 700; color: #388bfd; margin-bottom: 0.5rem; }
+    .template-box p { font-size: 0.85rem; color: #c9d1d9; white-space: pre-line; line-height: 1.6; }
+    .btn-copy { background: #238636; color: white; border: none; padding: 0.5rem 1rem; border-radius: 8px; font-weight: 700; font-size: 0.8rem; cursor: pointer; margin-top: 0.75rem; }
+    
+    table { width: 100%; border-collapse: collapse; margin-top: 0.5rem; }
+    th, td { padding: 0.75rem; text-align: left; border-bottom: 1px solid var(--border); font-size: 0.85rem; }
+    th { color: var(--muted); font-weight: 700; }
+    
+    .calc-box { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; background: rgba(0,0,0,0.3); padding: 1.25rem; border-radius: 12px; border: 1px solid var(--border); }
+    .calc-box input { width: 100%; background: var(--bg); border: 1px solid var(--border); color: white; padding: 0.6rem; border-radius: 8px; font-weight: 700; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    
+    <!-- Top Module Selector -->
+    <div class="module-selector">
+      <button id="btn-mod-host" class="mod-btn active-host" onclick="switchModule('host')">
+        <div class="mod-title">🏠 Módulo 1: Anfitrión & Operaciones</div>
+        <div class="mod-desc">Gestión diaria, solicitudes, plantillas de mensaje, estacionamiento y traslados.</div>
+      </button>
+      <button id="btn-mod-revenue" class="mod-btn" onclick="switchModule('revenue')">
+        <div class="mod-title">📈 Módulo 2: Revenue Management</div>
+        <div class="mod-desc">Estrategia tarifaria, grilla de precios, proyección anual y calculadora de descuentos.</div>
+      </button>
+    </div>
+
+    <!-- MODULE 1: ANFITRION -->
+    <div id="module-host" class="module-content active">
+      <header>
+        <div class="brand">
+          <h1 style="color:#f59e0b">PANEL DEL ANFITRIÓN — A.mar Carmen</h1>
+          <p>📍 Carmen 668, depto. 825 - Piso 8 • Santiago Centro</p>
+        </div>
+        <div class="badge" style="background:#451a03; color:#fbbf24; border:1px solid #d97706">Operaciones & Gestión de Huéspedes</div>
+      </header>
+
+      <div class="nav-tabs">
+        <button class="tab tab-h active-host" onclick="tabH(event, 'sec-sol')">📬 Solicitudes & Mensajes</button>
+        <button class="tab tab-h" onclick="tabH(event, 'sec-plantillas')">💬 Plantillas de Envío</button>
+        <button class="tab tab-h" onclick="tabH(event, 'sec-est')">🚗 Calculadora Estacionamiento</button>
+        <button class="tab tab-h" onclick="tabH(event, 'sec-traslado')">🚘 Traslado "La Casa de Sebas"</button>
+      </div>
+
+      <div id="sec-sol" class="section sec-h active">
+        <div class="card">
+          <h3 style="color:#f59e0b">Estado de Solicitudes y Reservas</h3>
+          <div class="grid">
+            <div class="stat-box">
+              <div style="font-size:0.8rem; color:var(--muted)">Solicitudes Hoy</div>
+              <div class="stat-val" style="color:#238636">0 Pendientes</div>
+            </div>
+            <div class="stat-box">
+              <div style="font-size:0.8rem; color:var(--muted)">Última Atención</div>
+              <div class="stat-val" style="color:#da3633">Baltazar (Rechazado)</div>
+            </div>
+            <div class="stat-box">
+              <div style="font-size:0.8rem; color:var(--muted)">Motivo Rechazo</div>
+              <div class="stat-val" style="color:#f59e0b">Uso Personal</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="sec-plantillas" class="section sec-h">
+        <div class="card">
+          <h3 style="color:#f59e0b">Plantillas Listas para Enviar (Copiar & Pegar)</h3>
+          
+          <div class="template-box">
+            <h4>🥂 Confirmación de Reserva</h4>
+            <p id="t_conf">¡Hola [Nombre]! 🥂 Tu reserva quedó confirmada, ¡gracias por elegir mi departamento!
+
+📍 Dirección: Carmen 668, depto. 825, Santiago Centro (Metro Santa Isabel).
+📅 Check-in: desde las 15:00 del [fecha llegada]
+📅 Check-out: hasta las 11:00 del [fecha salida]
+👤 Huéspedes: [N]
+
+Un par de días antes de tu llegada te enviaré las instrucciones exactas de check-in (es con casilleros y tarjeta de acceso, súper fácil) y el código para retirar tu tarjeta.
+
+Si vienes en auto, el edificio tiene estacionamiento de visitas: en tu estadía va sin costo (15:00 a 11:00); solo si dejas el auto pasado el check-out se cobra $2.000/hora.
+
+Cualquier duda, escríbeme directamente por aquí. ¡Te espero! 🙌
+Sebas</p>
+            <button class="btn-copy" onclick="copyText('t_conf')">Copiar Plantilla</button>
+          </div>
+
+          <div class="template-box">
+            <h4>🔑 Instrucciones de Check-in</h4>
+            <p id="t_check">¡Hola [Nombre]! Acá van las instrucciones para tu llegada 🔑
+
+📍 Carmen 668, depto. 825, Santiago Centro.
+
+1) RECEPCIÓN — regístrate como VISITA (no como huésped)
+Tanto para el ingreso común del edificio como para el estacionamiento, debes pasar a recepción y registrarte como VISITA, NO como huésped.
+
+2) RETIRA TU TARJETA DE ACCESO
+Frente al mesón de recepción están los casilleros. Ahí debes:
+• Ingresar el código que te compartiré, o
+• Pasar el QR frente al lente que está justo bajo la pantalla.
+Eso abrirá automáticamente la casilla donde estará tu tarjeta de acceso.
+
+⚠️ Importante: cualquier duda me la haces directamente a mí. El personal del edificio no tiene relación con tu reserva.
+
+3) HACIA EL ASCENSOR
+Al pasar los torniquetes, ve por el pasillo de la derecha hasta el fondo: ahí están los ascensores más cercanos al departamento.
+
+4) PISO 8
+Saliendo del ascensor, dos puertas hacia la izquierda. La misma tarjeta te da acceso al departamento.
+
+Tu código de casillero: [código / QR]
+
+¡Cualquier cosa me escribes! Que tengas una excelente estadía 🙌
+Sebas</p>
+            <button class="btn-copy" onclick="copyText('t_check')">Copiar Plantilla</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="sec-est" class="section sec-h">
+        <div class="card">
+          <h3 style="color:#f59e0b">Calculadora de Estacionamiento & Sobrestadía</h3>
+          <table>
+            <tr><th>Parámetro</th><th>Valor Regla</th></tr>
+            <tr><td>Hora Check-in anuncio</td><td>15:00 hrs</td></tr>
+            <tr><td>Hora Check-out anuncio</td><td>11:00 hrs</td></tr>
+            <tr><td>Horas gratis de visita (Edificio)</td><td>3 horas</td></tr>
+            <tr><td>Costo edificio por hora (cobro real a ti)</td><td>$700 / hora</td></tr>
+            <tr><td>Cargo al huésped por hora pasado check-out</td><td>$2.000 / hora</td></tr>
+            <tr><td>Tope diario de sobrestadía</td><td>$20.000</td></tr>
+            <tr><td>Tarifa estadías siguientes (por noche)</td><td>$12.000 / noche</td></tr>
+            <tr><td>Costo real para ti si regalas 1ª estadía (20h - 3h gratis = 17h x $700)</td><td><strong>$11.900 CLP</strong></td></tr>
+          </table>
+        </div>
+      </div>
+
+      <div id="sec-traslado" class="section sec-h">
+        <div class="card">
+          <h3 style="color:#f59e0b">Servicio de Traslado — "La Casa de Sebas"</h3>
+          <div class="grid">
+            <div class="stat-box" style="border-color:#d97706">
+              <div style="font-size:0.8rem; color:var(--muted)">Traslado en mi auto (Privado)</div>
+              <div class="stat-val" style="color:#f59e0b">$20.000 CLP</div>
+              <div style="font-size:0.75rem; color:var(--muted); margin-top:0.3rem">Aprox. USD 20</div>
+            </div>
+          </div>
+
+          <table>
+            <thead><tr><th>Medio de Transporte</th><th>Valor Aprox.</th><th>Tiempo Estimado</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Mi auto (privado - Sebas)</strong></td><td><strong>$20.000 CLP</strong></td><td>25-40 min</td></tr>
+              <tr><td>Uber / Cabify</td><td>$15.000 - $25.000</td><td>25-40 min</td></tr>
+              <tr><td>Taxi oficial aeropuerto</td><td>$18.000 - $25.000</td><td>25-40 min</td></tr>
+              <tr><td>Bus Centropuerto</td><td>~$3.000</td><td>40-50 min</td></tr>
+              <tr><td>Metro (Santa Lucía L1 / Matta L3 / Sta. Isabel L5)</td><td>Tarifa pública</td><td>A pocas cuadras</td></tr>
+            </tbody>
+          </table>
+
+          <div class="template-box" style="margin-top:1.5rem">
+            <h4>🚘 Mensaje de Traslado para Copiar</h4>
+            <p id="t_tras">Dirección: Carmen 668, depto. 825, Santiago Centro.
+
+🚗 Cómo llegar / transporte:
+* En mi auto (traslado privado): puedo pasar a buscarte al aeropuerto y dejarte directo en el depa por $20.000 CLP (aprox. USD 20), cómodo y sin sorpresas de tarifa. Solo mándame tu vuelo u hora de llegada y lo coordinamos. Dentro de la ciudad también lo podemos organizar.
+
+* Uber / Cabify: desde el aeropuerto, aprox. $15.000–$25.000 (25–40 min según el tráfico). Funcionan muy bien a toda hora.
+
+* Taxi oficial: entre $18.000 y $25.000 desde el aeropuerto.
+
+* Bus Centropuerto: la opción más económica, ~$3.000 (40–50 min) hasta el centro, y desde ahí Metro o Uber corto hasta el depa.
+
+* Metro: las estaciones más cercanas son Santa Lucía (Línea 1 - No requiere transbordo), Matta (Línea 3 - Transbordo en Metro Universidad de Chile), Santa Isabel (Línea 5 - Transbordo en Metro Baquedano) a pocas cuadras. Muy conectado para moverte por toda la ciudad. 
+Te recomiendo Santa Lucía, por cercanía y Santa Isabel, por ser la puerta al Barrio Italia (muy turístico).</p>
+            <button class="btn-copy" onclick="copyText('t_tras')">Copiar Mensaje</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- MODULE 2: REVENUE MANAGEMENT -->
+    <div id="module-revenue" class="module-content">
+      <header>
+        <div class="brand">
+          <h1 style="color:var(--coral)">REVENUE MANAGEMENT & ESTRATEGIA — A.mar Carmen</h1>
+          <p>Estrategia Tarifaria, Ocupación, Proyecciones Anuales & Calculadora de Descuentos</p>
+        </div>
+        <div class="badge" style="background:rgba(255,56,92,0.15); color:var(--coral); border:1px solid var(--coral)">Optimización & RevPAR</div>
+      </header>
+
+      <div class="nav-tabs">
+        <button class="tab tab-r active-revenue" onclick="tabR(event, 'sec-diag')">📊 Diagnóstico & Plan 4 Movimientos</button>
+        <button class="tab tab-r" onclick="tabR(event, 'sec-grilla')">🏷️ Grilla de Precios & Mercado</button>
+        <button class="tab tab-r" onclick="tabR(event, 'sec-proy')">📈 Proyección Anual ($8.071k)</button>
+        <button class="tab tab-r" onclick="tabR(event, 'sec-calc')">🧮 Calculadora de Descuentos</button>
+      </div>
+
+      <div id="sec-diag" class="section sec-r active">
+        <div class="card">
+          <h3 style="color:var(--coral)">Dónde Estás Parado Hoy</h3>
+          <div class="grid">
+            <div class="stat-box">
+              <div style="font-size:0.8rem; color:var(--muted)">Tu Tarifa Base Estimada</div>
+              <div class="stat-val" style="color:var(--amber)">$40.000 CLP</div>
+            </div>
+            <div class="stat-box">
+              <div style="font-size:0.8rem; color:var(--muted)">Promedio Santiago Centro</div>
+              <div class="stat-val">$38.500 CLP</div>
+            </div>
+            <div class="stat-box">
+              <div style="font-size:0.8rem; color:var(--muted)">1D1B Típico del Sector</div>
+              <div class="stat-val">$30 - 45 mil</div>
+            </div>
+            <div class="stat-box">
+              <div style="font-size:0.8rem; color:var(--muted)">Ocupación Promedio Zona</div>
+              <div class="stat-val" style="color:var(--emerald)">54%</div>
+            </div>
+          </div>
+          <p style="font-size:0.85rem; color:var(--muted); margin-top:0.5rem">
+            * Tu base sale de la reserva de Patricia ($46.172 con comisión ≈ $40.000 base). Estás en la franja alta del sector sin reseñas todavía.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3 style="color:var(--coral)">Plan de Acción en 4 Movimientos</h3>
+          <ul style="font-size:0.9rem; line-height:1.8; padding-left:1.2rem; color:#e2e8f0">
+            <li><strong>1. Precio de Lanzamiento</strong>: Aplicar temporada baja -20% de anfitrión nuevo ($27.200 entre semana / $32.000 finde) hasta acumular 5 a 8 reseñas de 5★.</li>
+            <li><strong>2. Activar Descuentos Estratégicos</strong>: Anfitrión nuevo (-20%), Semanal (-15%), Mensual (-35%), Última hora (-10%).</li>
+            <li><strong>3. Estacionamiento Visible</strong>: Marcarlo como comodidad clave (1ª estadía gratis para ganar reseña, luego $12.000/noche).</li>
+            <li><strong>4. Ajustes Operativos</strong>: Activar Reserva Inmediata ON + Detector de monóxido de carbono en la app.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div id="sec-grilla" class="section sec-r">
+        <div class="card">
+          <h3 style="color:var(--coral)">Grilla de Precios por Temporada</h3>
+          <table>
+            <thead>
+              <tr><th>Temporada</th><th>Meses</th><th>Entre Semana</th><th>Fin de Semana</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><strong>Baja</strong></td><td>Junio - Agosto</td><td>$34.000</td><td>$40.000</td></tr>
+              <tr><td><strong>Media</strong></td><td>Marzo-Mayo / Oct-Nov</td><td>$40.000</td><td>$47.000</td></tr>
+              <tr><td><strong>Alta</strong></td><td>Diciembre-Febrero / 18 Sep</td><td>$48.000</td><td>$58.000</td></tr>
+            </tbody>
+          </table>
+          <p style="font-size:0.8rem; color:var(--muted); margin-top:0.75rem">
+            * Nota: El huésped ve ~14% adicional por la comisión de servicio de Airbnb (Ej. Tarifa base $40.000 -> aparece ≈ $45.600).
+          </p>
+        </div>
+
+        <div class="card">
+          <h3 style="color:var(--coral)">Tarifas de Lanzamiento (-20%)</h3>
+          <div class="grid">
+            <div class="stat-box" style="border-color:var(--emerald)">
+              <div style="font-size:0.8rem; color:var(--muted)">Entre Semana (-20%)</div>
+              <div class="stat-val" style="color:var(--emerald)">$27.200 CLP</div>
+            </div>
+            <div class="stat-box" style="border-color:var(--emerald)">
+              <div style="font-size:0.8rem; color:var(--muted)">Fin de Semana (-20%)</div>
+              <div class="stat-val" style="color:var(--emerald)">$32.000 CLP</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="sec-proy" class="section sec-r">
+        <div class="card">
+          <h3 style="color:var(--coral)">KPIs del Año & Supuestos Globales</h3>
+          <div class="grid">
+            <div class="stat-box">
+              <div style="font-size:0.8rem; color:var(--muted)">Utilidad Neta Anual</div>
+              <div class="stat-val" style="color:var(--emerald)">$8.071.000 CLP</div>
+            </div>
+            <div class="stat-box">
+              <div style="font-size:0.8rem; color:var(--muted)">Promedio Mensual</div>
+              <div class="stat-val">$673.000 CLP</div>
+            </div>
+            <div class="stat-box">
+              <div style="font-size:0.8rem; color:var(--muted)">Ocupación Media</div>
+              <div class="stat-val" style="color:var(--blue)">65%</div>
+            </div>
+            <div class="stat-box">
+              <div style="font-size:0.8rem; color:var(--muted)">Recupero de Inversión</div>
+              <div class="stat-val" style="color:var(--purple)">3.1 meses</div>
+            </div>
+          </div>
+
+          <h4 style="font-size:0.95rem; margin-top:1.5rem; margin-bottom:0.5rem; color:var(--amber)">Supuestos Financieros Considerados:</h4>
+          <ul style="font-size:0.85rem; color:var(--muted); line-height:1.6; padding-left:1.2rem">
+            <li>Costos fijos mensuales: $455.000 (Arriendo + Gastos Comunes + Servicios + Internet)</li>
+            <li>Margen por limpieza: $15.000 por reserva (cobro $30.000 - costo real)</li>
+            <li>Inversión inicial: $2.074.410 (Equipamiento + entrada)</li>
+            <li>Comisión app aplicada: 3% (Airbnb compartida)</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <h3 style="color:var(--coral)">Detalle Mes a Mes</h3>
+          <table>
+            <thead>
+              <tr><th>Mes</th><th>Temp.</th><th>Dom-Jue</th><th>Vie-Sáb</th><th>ADR</th><th>Noches</th><th>Utilidad Neta</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Ene</td><td>Alta</td><td>$58.000</td><td>$65.000</td><td>$60.000</td><td>23</td><td>$988.600</td></tr>
+              <tr><td>Feb</td><td>Media</td><td>$52.000</td><td>$58.000</td><td>$53.714</td><td>20</td><td>$707.052</td></tr>
+              <tr><td>Mar</td><td>Media</td><td>$50.000</td><td>$55.000</td><td>$51.429</td><td>18</td><td>$547.950</td></tr>
+              <tr><td>Abr</td><td>Media</td><td>$48.000</td><td>$52.000</td><td>$49.143</td><td>18</td><td>$508.037</td></tr>
+              <tr><td>May</td><td>Baja</td><td>$42.000</td><td>$46.000</td><td>$43.143</td><td>14</td><td>$235.882</td></tr>
+              <tr><td>Jun</td><td>Media</td><td>$46.000</td><td>$50.000</td><td>$47.143</td><td>16</td><td>$366.659</td></tr>
+              <tr><td>Jul</td><td>Alta</td><td>$55.000</td><td>$60.000</td><td>$56.429</td><td>22</td><td>$839.195</td></tr>
+              <tr><td>Ago</td><td>Alta</td><td>$60.000</td><td>$68.000</td><td>$62.286</td><td>24</td><td>$1.100.018</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="sec-calc" class="section sec-r">
+        <div class="card">
+          <h3 style="color:var(--coral)">Calculadora Dinámica de Descuentos para Huéspedes</h3>
+          <div class="calc-box">
+            <div>
+              <label style="font-size:0.8rem; color:var(--muted)">Ingresa Tarifa Noche Base ($ CLP):</label>
+              <input type="number" id="valBase" value="40000" oninput="calc()">
+            </div>
+            <div style="text-align:center">
+              <div style="font-size:0.8rem; color:var(--muted)">Con 10% Descuento</div>
+              <div id="r10" style="font-size:1.4rem; font-weight:800; color:var(--emerald); margin-top:0.3rem">$36.000 CLP</div>
+            </div>
+            <div style="text-align:center">
+              <div style="font-size:0.8rem; color:var(--muted)">Con 15% Descuento</div>
+              <div id="r15" style="font-size:1.4rem; font-weight:800; color:var(--coral); margin-top:0.3rem">$34.000 CLP</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    function switchModule(mod) {
+      document.querySelectorAll('.module-content').forEach(m => m.classList.remove('active'));
+      document.getElementById('btn-mod-host').className = 'mod-btn';
+      document.getElementById('btn-mod-revenue').className = 'mod-btn';
+      
+      if (mod === 'host') {
+        document.getElementById('module-host').classList.add('active');
+        document.getElementById('btn-mod-host').className = 'mod-btn active-host';
+      } else {
+        document.getElementById('module-revenue').classList.add('active');
+        document.getElementById('btn-mod-revenue').className = 'mod-btn active-revenue';
+      }
+    }
+
+    function tabH(e, sec) {
+      document.querySelectorAll('.sec-h').forEach(s => s.classList.remove('active'));
+      document.querySelectorAll('.tab-h').forEach(t => t.classList.remove('active-host'));
+      document.getElementById(sec).classList.add('active');
+      e.currentTarget.classList.add('active-host');
+    }
+
+    function tabR(e, sec) {
+      document.querySelectorAll('.sec-r').forEach(s => s.classList.remove('active'));
+      document.querySelectorAll('.tab-r').forEach(t => t.classList.remove('active-revenue'));
+      document.getElementById(sec).classList.add('active');
+      e.currentTarget.classList.add('active-revenue');
+    }
+
+    function copyText(id) {
+      navigator.clipboard.writeText(document.getElementById(id).innerText);
+      alert('¡Copiado al portapapeles!');
+    }
+
+    function calc() {
+      const v = parseFloat(document.getElementById('valBase').value) || 0;
+      document.getElementById('r10').innerText = '$' + Math.round(v * 0.9).toLocaleString('es-CL') + ' CLP';
+      document.getElementById('r15').innerText = '$' + Math.round(v * 0.85).toLocaleString('es-CL') + ' CLP';
+    }
+  </script>
+</body>
+</html>
