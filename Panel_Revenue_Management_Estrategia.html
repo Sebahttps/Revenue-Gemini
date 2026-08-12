@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel de Revenue Management — Tarifas, Proyecciones & Estrategia</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0b0f19;
+      --card: #151d2a;
+      --border: #263346;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --coral: #ff385c;
+      --emerald: #10b981;
+      --blue: #3b82f6;
+      --amber: #f59e0b;
+      --purple: #a855f7;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
+    body { background: var(--bg); color: var(--text); padding: 2rem; min-height: 100vh; }
+    .container { max-width: 1200px; margin: 0 auto; }
+    header {
+      background: linear-gradient(135deg, #1e293b, #0f172a);
+      border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem 2rem;
+      margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;
+    }
+    .brand h1 { font-size: 1.5rem; font-weight: 800; color: var(--coral); }
+    .brand p { color: var(--muted); font-size: 0.875rem; }
+    .badge { background: rgba(255,56,92,0.15); color: var(--coral); border: 1px solid var(--coral); padding: 0.4rem 0.8rem; border-radius: 9999px; font-weight: 700; font-size: 0.8rem; }
+    
+    .nav-tabs { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; overflow-x: auto; padding-bottom: 0.5rem; }
+    .tab { background: var(--card); border: 1px solid var(--border); color: var(--muted); padding: 0.75rem 1.25rem; border-radius: 10px; font-weight: 700; font-size: 0.875rem; cursor: pointer; white-space: nowrap; }
+    .tab.active { background: var(--coral); color: white; border-color: var(--coral); }
+    
+    .section { display: none; }
+    .section.active { display: block; }
+    
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem; margin-bottom: 1.5rem; }
+    .card h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem; color: var(--coral); border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; }
+    
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 1rem; }
+    .stat-box { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 12px; padding: 1.2rem; text-align: center; }
+    .stat-val { font-size: 1.5rem; font-weight: 800; margin-top: 0.3rem; }
+    
+    table { width: 100%; border-collapse: collapse; margin-top: 0.5rem; }
+    th, td { padding: 0.75rem; text-align: left; border-bottom: 1px solid var(--border); font-size: 0.85rem; }
+    th { color: var(--muted); font-weight: 700; }
+    
+    .calc-box { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; background: rgba(0,0,0,0.3); padding: 1.25rem; border-radius: 12px; border: 1px solid var(--border); }
+    .calc-box input { width: 100%; background: var(--bg); border: 1px solid var(--border); color: white; padding: 0.6rem; border-radius: 8px; font-weight: 700; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="brand">
+        <h1>REVENUE MANAGEMENT & ESTRATEGIA — A.mar Carmen</h1>
+        <p>Estrategia Tarifaria, Ocupación, Proyecciones Anuales & Calculadora de Descuentos</p>
+      </div>
+      <div class="badge">Módulo 2: Revenue Management</div>
+    </header>
+
+    <div class="nav-tabs">
+      <button class="tab active" onclick="tab(event, 'sec-diag')">📊 Diagnóstico & Plan 4 Movimientos</button>
+      <button class="tab" onclick="tab(event, 'sec-grilla')">🏷️ Grilla de Precios & Mercado</button>
+      <button class="tab" onclick="tab(event, 'sec-proy')">📈 Proyección Anual ($8.071k)</button>
+      <button class="tab" onclick="tab(event, 'sec-calc')">🧮 Calculadora de Descuentos</button>
+    </div>
+
+    <!-- Sec 1: Diagnostico -->
+    <div id="sec-diag" class="section active">
+      <div class="card">
+        <h3>Dónde Estás Parado Hoy</h3>
+        <div class="grid">
+          <div class="stat-box">
+            <div style="font-size:0.8rem; color:var(--muted)">Tu Tarifa Base Estimada</div>
+            <div class="stat-val" style="color:var(--amber)">$40.000 CLP</div>
+          </div>
+          <div class="stat-box">
+            <div style="font-size:0.8rem; color:var(--muted)">Promedio Santiago Centro</div>
+            <div class="stat-val">$38.500 CLP</div>
+          </div>
+          <div class="stat-box">
+            <div style="font-size:0.8rem; color:var(--muted)">1D1B Típico del Sector</div>
+            <div class="stat-val">$30 - 45 mil</div>
+          </div>
+          <div class="stat-box">
+            <div style="font-size:0.8rem; color:var(--muted)">Ocupación Promedio Zona</div>
+            <div class="stat-val" style="color:var(--emerald)">54%</div>
+          </div>
+        </div>
+        <p style="font-size:0.85rem; color:var(--muted); margin-top:0.5rem">
+          * Tu base sale de la reserva de Patricia ($46.172 con comisión ≈ $40.000 base). Estás en la franja alta del sector sin reseñas todavía.
+        </p>
+      </div>
+
+      <div class="card">
+        <h3>Plan de Acción en 4 Movimientos</h3>
+        <ul style="font-size:0.9rem; line-height:1.8; padding-left:1.2rem; color:#e2e8f0">
+          <li><strong>1. Precio de Lanzamiento</strong>: Aplicar temporada baja -20% de anfitrión nuevo ($27.200 entre semana / $32.000 finde) hasta acumular 5 a 8 reseñas de 5★.</li>
+          <li><strong>2. Activar Descuentos Estratégicos</strong>: Anfitrión nuevo (-20%), Semanal (-15%), Mensual (-35%), Última hora (-10%).</li>
+          <li><strong>3. Estacionamiento Visible</strong>: Marcarlo como comodidad clave (1ª estadía gratis para ganar reseña, luego $12.000/noche).</li>
+          <li><strong>4. Ajustes Operativos</strong>: Activar Reserva Inmediata ON + Detector de monóxido de carbono en la app.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Sec 2: Grilla -->
+    <div id="sec-grilla" class="section">
+      <div class="card">
+        <h3>Grilla de Precios por Temporada</h3>
+        <table>
+          <thead>
+            <tr><th>Temporada</th><th>Meses</th><th>Entre Semana</th><th>Fin de Semana</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>Baja</strong></td><td>Junio - Agosto</td><td>$34.000</td><td>$40.000</td></tr>
+            <tr><td><strong>Media</strong></td><td>Marzo-Mayo / Oct-Nov</td><td>$40.000</td><td>$47.000</td></tr>
+            <tr><td><strong>Alta</strong></td><td>Diciembre-Febrero / 18 Sep</td><td>$48.000</td><td>$58.000</td></tr>
+          </tbody>
+        </table>
+        <p style="font-size:0.8rem; color:var(--muted); margin-top:0.75rem">
+          * Nota: El huésped ve ~14% adicional por la comisión de servicio de Airbnb (Ej. Tarifa base $40.000 -> aparece ≈ $45.600).
+        </p>
+      </div>
+
+      <div class="card">
+        <h3>Tarifas de Lanzamiento (-20%)</h3>
+        <div class="grid">
+          <div class="stat-box" style="border-color:var(--emerald)">
+            <div style="font-size:0.8rem; color:var(--muted)">Entre Semana (-20%)</div>
+            <div class="stat-val" style="color:var(--emerald)">$27.200 CLP</div>
+          </div>
+          <div class="stat-box" style="border-color:var(--emerald)">
+            <div style="font-size:0.8rem; color:var(--muted)">Fin de Semana (-20%)</div>
+            <div class="stat-val" style="color:var(--emerald)">$32.000 CLP</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sec 3: Proyeccion -->
+    <div id="sec-proy" class="section">
+      <div class="card">
+        <h3>KPIs del Año & Supuestos Globles</h3>
+        <div class="grid">
+          <div class="stat-box">
+            <div style="font-size:0.8rem; color:var(--muted)">Utilidad Neta Anual</div>
+            <div class="stat-val" style="color:var(--emerald)">$8.071.000 CLP</div>
+          </div>
+          <div class="stat-box">
+            <div style="font-size:0.8rem; color:var(--muted)">Promedio Mensual</div>
+            <div class="stat-val">$673.000 CLP</div>
+          </div>
+          <div class="stat-box">
+            <div style="font-size:0.8rem; color:var(--muted)">Ocupación Media</div>
+            <div class="stat-val" style="color:var(--blue)">65%</div>
+          </div>
+          <div class="stat-box">
+            <div style="font-size:0.8rem; color:var(--muted)">Recupero de Inversión</div>
+            <div class="stat-val" style="color:var(--purple)">3.1 meses</div>
+          </div>
+        </div>
+
+        <h4 style="font-size:0.95rem; margin-top:1.5rem; margin-bottom:0.5rem; color:var(--amber)">Supuestos Financieros Considerados:</h4>
+        <ul style="font-size:0.85rem; color:var(--muted); line-height:1.6; padding-left:1.2rem">
+          <li>Costos fijos mensuales: $455.000 (Arriendo + Gastos Comunes + Servicios + Internet)</li>
+          <li>Margen por limpieza: $15.000 por reserva (cobro $30.000 - costo real)</li>
+          <li>Inversión inicial: $2.074.410 (Equipamiento + entrada)</li>
+          <li>Comisión app aplicada: 3% (Airbnb compartida)</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>Detalle Mes a Mes</h3>
+        <table>
+          <thead>
+            <tr><th>Mes</th><th>Temp.</th><th>Dom-Jue</th><th>Vie-Sáb</th><th>ADR</th><th>Noches</th><th>Utilidad Neta</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Ene</td><td>Alta</td><td>$58.000</td><td>$65.000</td><td>$60.000</td><td>23</td><td>$988.600</td></tr>
+            <tr><td>Feb</td><td>Media</td><td>$52.000</td><td>$58.000</td><td>$53.714</td><td>20</td><td>$707.052</td></tr>
+            <tr><td>Mar</td><td>Media</td><td>$50.000</td><td>$55.000</td><td>$51.429</td><td>18</td><td>$547.950</td></tr>
+            <tr><td>Abr</td><td>Media</td><td>$48.000</td><td>$52.000</td><td>$49.143</td><td>18</td><td>$508.037</td></tr>
+            <tr><td>May</td><td>Baja</td><td>$42.000</td><td>$46.000</td><td>$43.143</td><td>14</td><td>$235.882</td></tr>
+            <tr><td>Jun</td><td>Media</td><td>$46.000</td><td>$50.000</td><td>$47.143</td><td>16</td><td>$366.659</td></tr>
+            <tr><td>Jul</td><td>Alta</td><td>$55.000</td><td>$60.000</td><td>$56.429</td><td>22</td><td>$839.195</td></tr>
+            <tr><td>Ago</td><td>Alta</td><td>$60.000</td><td>$68.000</td><td>$62.286</td><td>24</td><td>$1.100.018</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Sec 4: Calculadora -->
+    <div id="sec-calc" class="section">
+      <div class="card">
+        <h3>Calculadora Dinámica de Descuentos para Huéspedes</h3>
+        <div class="calc-box">
+          <div>
+            <label style="font-size:0.8rem; color:var(--muted)">Ingresa Tarifa Noche Base ($ CLP):</label>
+            <input type="number" id="valBase" value="40000" oninput="calc()">
+          </div>
+          <div style="text-align:center">
+            <div style="font-size:0.8rem; color:var(--muted)">Con 10% Descuento</div>
+            <div id="r10" style="font-size:1.4rem; font-weight:800; color:var(--emerald); margin-top:0.3rem">$36.000 CLP</div>
+          </div>
+          <div style="text-align:center">
+            <div style="font-size:0.8rem; color:var(--muted)">Con 15% Descuento</div>
+            <div id="r15" style="font-size:1.4rem; font-weight:800; color:var(--coral); margin-top:0.3rem">$34.000 CLP</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    function tab(e, sec) {
+      document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.getElementById(sec).classList.add('active');
+      e.currentTarget.classList.add('active');
+    }
+    function calc() {
+      const v = parseFloat(document.getElementById('valBase').value) || 0;
+      document.getElementById('r10').innerText = '$' + Math.round(v * 0.9).toLocaleString('es-CL') + ' CLP';
+      document.getElementById('r15').innerText = '$' + Math.round(v * 0.85).toLocaleString('es-CL') + ' CLP';
+    }
+  </script>
+</body>
+</html>
