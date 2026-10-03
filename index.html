@@ -586,8 +586,19 @@ Sebas`}
       try {
         if (!skipFetch) {
           box.innerHTML = '<p style="color:var(--muted)">Cargando…</p>';
-          const r = await fetch(url + '?token=' + encodeURIComponent(tok));
-          const j = await r.json();
+          let j = null, lastErr = '';
+          for (let intento = 1; intento <= 3 && !j; intento++) {
+            try {
+              const r = await fetch(url + '?token=' + encodeURIComponent(tok));
+              const txt = await r.text();
+              if (txt.trim().charAt(0) !== '{') throw new Error('Google tardó en responder');
+              j = JSON.parse(txt);
+            } catch (e) {
+              lastErr = e.message;
+              if (intento < 3) await new Promise(res => setTimeout(res, 1500 * intento));
+            }
+          }
+          if (!j) throw new Error(lastErr + '. Pulsa Actualizar en unos segundos');
           if (j.error) throw new Error(j.error);
           LASTITEMS = j.items;
           document.getElementById('st-upd').textContent = new Date(j.generated).toLocaleTimeString('es-CL', {hour:'2-digit', minute:'2-digit'});
@@ -606,7 +617,7 @@ Sebas`}
             <div>
               <div class="who"><span class="pill ${i.platform === 'Airbnb' ? 'air' : 'boo'}">${i.platform}</span>${esc(i.guest || 'Huésped')}</div>
               <div class="meta">${esc(i.tipo)}${i.dates ? ' · ' + esc(i.dates) : ''}${i.conf ? ' · Conf. ' + esc(i.conf) : ''} · ${d}${isDone ? ' · ✔ atendida' : ''}</div>
-              <div class="snip">${esc(i.snippet.slice(0, 220))}…</div>
+              <div class="snip">${esc(String(i.snippet || '').replace(/%\w+%|https?:\/\/\S+/g, '').replace(/\s+/g, ' ').trim().slice(0, 220))}…</div>
             </div>
             <div style="display:flex; gap:0.4rem; flex-wrap:wrap">
               <button class="btn-copy" style="margin:0" onclick='fillFromReq(${JSON.stringify(i.guest)}, ${JSON.stringify(i.dates)})'>Responder</button>
