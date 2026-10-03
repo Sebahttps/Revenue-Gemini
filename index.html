@@ -79,6 +79,27 @@
     
     .calc-box { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; background: rgba(0,0,0,0.3); padding: 1.25rem; border-radius: 12px; border: 1px solid var(--border); }
     .calc-box input { width: 100%; background: var(--bg); border: 1px solid var(--border); color: white; padding: 0.6rem; border-radius: 8px; font-weight: 700; }
+
+    .btn-sec { background: #1f2937; color: #e5e7eb; border: 1px solid var(--border); padding: 0.5rem 1rem; border-radius: 8px; font-weight: 700; font-size: 0.8rem; cursor: pointer; }
+    .btn-sec:hover { border-color: var(--amber); }
+    .req { display:flex; justify-content:space-between; align-items:center; gap:1rem; flex-wrap:wrap; background: rgba(0,0,0,0.3); border:1px solid var(--border); border-left:4px solid var(--amber); border-radius:12px; padding:1rem; margin-bottom:0.75rem; }
+    .req.done { opacity:.45; border-left-color:#475569; }
+    .req .who { font-weight:800; font-size:1rem; }
+    .req .meta { font-size:0.78rem; color:var(--muted); margin-top:0.2rem; }
+    .req .snip { font-size:0.8rem; color:#cbd5e1; margin-top:0.4rem; max-width:620px; }
+    .pill { display:inline-block; padding:0.15rem 0.55rem; border-radius:9999px; font-size:0.7rem; font-weight:800; margin-right:0.4rem; }
+    .pill.air { background:rgba(255,56,92,.15); color:var(--coral); }
+    .pill.boo { background:rgba(59,130,246,.15); color:var(--blue); }
+    .form-row { display:grid; grid-template-columns: repeat(auto-fit, minmax(150px,1fr)); gap:0.75rem; margin-bottom:1rem; }
+    .form-row label { font-size:0.72rem; color:var(--muted); display:block; margin-bottom:0.2rem; }
+    .form-row input { width:100%; background: var(--bg); border:1px solid var(--border); color:white; padding:0.55rem; border-radius:8px; font-weight:600; }
+    .chips { display:flex; flex-wrap:wrap; gap:0.5rem; margin-bottom:1rem; }
+    .chip { background: var(--card); border:1px solid var(--border); color:var(--muted); padding:0.5rem 0.9rem; border-radius:9999px; font-weight:700; font-size:0.8rem; cursor:pointer; }
+    .chip.on { background:#238636; color:white; border-color:#238636; }
+    .chip.no.on { background:#b91c1c; border-color:#b91c1c; }
+    #resp-out { width:100%; min-height:180px; background: rgba(0,0,0,0.3); border:1px solid var(--border); color:#e2e8f0; border-radius:12px; padding:1rem; font-size:0.9rem; line-height:1.6; resize:vertical; }
+    #toast { position:fixed; bottom:1.5rem; left:50%; transform:translateX(-50%); background:#238636; color:white; padding:0.6rem 1.2rem; border-radius:10px; font-weight:700; opacity:0; transition:opacity .2s; pointer-events:none; }
+    #toast.show { opacity:1; }
   </style>
 </head>
 <body>
@@ -108,6 +129,7 @@
 
       <div class="nav-tabs">
         <button class="tab tab-h active-host" onclick="tabH(event, 'sec-sol')">📬 Solicitudes & Mensajes</button>
+        <button id="tab-resp" class="tab tab-h" onclick="tabH(event, 'sec-resp')">↩️ Responder Solicitud</button>
         <button class="tab tab-h" onclick="tabH(event, 'sec-plantillas')">💬 Plantillas de Envío</button>
         <button class="tab tab-h" onclick="tabH(event, 'sec-est')">🚗 Calculadora Estacionamiento</button>
         <button class="tab tab-h" onclick="tabH(event, 'sec-traslado')">🚘 Traslado "La Casa de Sebas"</button>
@@ -118,18 +140,46 @@
           <h3 style="color:#f59e0b">Estado de Solicitudes y Reservas</h3>
           <div class="grid">
             <div class="stat-box">
-              <div style="font-size:0.8rem; color:var(--muted)">Solicitudes Hoy</div>
-              <div class="stat-val" style="color:#238636">0 Pendientes</div>
+              <div style="font-size:0.8rem; color:var(--muted)">Solicitudes pendientes</div>
+              <div class="stat-val" id="st-pend" style="color:var(--muted)">—</div>
             </div>
             <div class="stat-box">
-              <div style="font-size:0.8rem; color:var(--muted)">Última Atención</div>
-              <div class="stat-val" style="color:#da3633">Baltazar (Rechazado)</div>
+              <div style="font-size:0.8rem; color:var(--muted)">Última solicitud</div>
+              <div class="stat-val" id="st-last" style="color:#f59e0b; font-size:1.1rem">—</div>
             </div>
             <div class="stat-box">
-              <div style="font-size:0.8rem; color:var(--muted)">Motivo Rechazo</div>
-              <div class="stat-val" style="color:#f59e0b">Uso Personal</div>
+              <div style="font-size:0.8rem; color:var(--muted)">Última actualización</div>
+              <div class="stat-val" id="st-upd" style="font-size:1.1rem">—</div>
             </div>
           </div>
+          <div style="display:flex; gap:0.5rem; flex-wrap:wrap">
+            <button class="btn-sec" onclick="loadReq()">🔄 Actualizar</button>
+            <button class="btn-sec" onclick="setupConn()">🔌 Conectar / cambiar</button>
+          </div>
+        </div>
+        <div class="card">
+          <h3 style="color:#f59e0b">Bandeja (Airbnb + Booking, últimos 14 días)</h3>
+          <div id="req-list"><p style="color:var(--muted); font-size:0.85rem">Sin conexión aún. Pulsa "Conectar".</p></div>
+        </div>
+      </div>
+
+      <div id="sec-resp" class="section sec-h">
+        <div class="card">
+          <h3 style="color:#f59e0b">Responder Solicitud</h3>
+          <div class="form-row">
+            <div><label>Nombre huésped</label><input id="f-nombre" oninput="renderResp()" placeholder="Katerine"></div>
+            <div><label>Llegada</label><input id="f-llegada" oninput="renderResp()" placeholder="2 de oct"></div>
+            <div><label>Salida</label><input id="f-salida" oninput="renderResp()" placeholder="3 de oct"></div>
+            <div><label>N° huéspedes</label><input id="f-n" oninput="renderResp()" placeholder="2"></div>
+            <div><label>Máx. huéspedes</label><input id="f-max" oninput="renderResp()" value="2"></div>
+            <div><label>Mín. noches</label><input id="f-min" oninput="renderResp()" value="2"></div>
+          </div>
+          <div style="font-size:0.75rem; color:var(--muted); margin-bottom:0.4rem">✅ Aceptar</div>
+          <div class="chips" id="chips-yes"></div>
+          <div style="font-size:0.75rem; color:var(--muted); margin-bottom:0.4rem">❌ Rechazar (con motivo)</div>
+          <div class="chips" id="chips-no"></div>
+          <textarea id="resp-out" placeholder="Elige una respuesta arriba. Puedes editar el texto antes de copiar."></textarea>
+          <button class="btn-copy" onclick="copyResp()">Copiar respuesta</button>
         </div>
       </div>
 
@@ -409,6 +459,7 @@ Te recomiendo Santa Lucía, por cercanía y Santa Isabel, por ser la puerta al B
 
   </div>
 
+  <div id="toast"></div>
   <script>
     function switchModule(mod) {
       document.querySelectorAll('.module-content').forEach(m => m.classList.remove('active'));
@@ -440,8 +491,136 @@ Te recomiendo Santa Lucía, por cercanía y Santa Isabel, por ser la puerta al B
 
     function copyText(id) {
       navigator.clipboard.writeText(document.getElementById(id).innerText);
-      alert('¡Copiado al portapapeles!');
+      toast('¡Copiado al portapapeles!');
     }
+
+
+    /* ---------- Respuestas a solicitudes ---------- */
+    const RESP = [
+      {id:'si', no:false, label:'✅ Sí, disponible', text:`¡Hola [Nombre]! 😊 Sí, el departamento está disponible del [fecha llegada] al [fecha salida] para [N] huésped(es).
+
+Está en Carmen 668, piso 8, Santiago Centro, a pasos del Metro Santa Lucía y Santa Isabel.
+
+Si quieres avanzar, confirma la reserva por la app y yo te envío todo lo necesario para tu llegada. Cualquier duda, me escribes por aquí 🙌
+Sebas`},
+      {id:'fechas', no:true, label:'📅 Fechas no disponibles', text:`¡Hola [Nombre]! Gracias por escribirme. Lamentablemente esas fechas ya no están disponibles. Si te sirven otras, revisa el calendario y con gusto te recibo. ¡Saludos! 🙌
+Sebas`},
+      {id:'personal', no:true, label:'🏠 Uso personal', text:`¡Hola [Nombre]! Gracias por tu interés. Esos días voy a usar el departamento personalmente, así que no puedo aceptar la reserva. Ojalá puedas considerarlo para otra fecha 🙂
+Sebas`},
+      {id:'recepcion', no:true, label:'🔑 No alcanzo a recibirte', text:`¡Hola [Nombre]! Gracias por escribir. Para esa fecha y horario no puedo coordinar tu recepción ni el check-in, y prefiero no dejarte con una mala experiencia. Si ajustas la llegada (idealmente entre 15:00 y 21:00), lo vemos.
+Saludos, Sebas`},
+      {id:'ultimo', no:true, label:'⏱️ Aviso muy corto', text:`¡Hola [Nombre]! Gracias por tu solicitud. Para reservas con tan poca anticipación no alcanzo a dejar el departamento listo. Si vienes más adelante, escríbeme y lo coordinamos. ¡Saludos!
+Sebas`},
+      {id:'huespedes', no:true, label:'👥 Más huéspedes de lo permitido', text:`¡Hola [Nombre]! Gracias por tu interés. El departamento es de 1 dormitorio y 1 baño, ideal para hasta [máx] personas. Para [N] no sería cómodo, así que no puedo aceptar esta reserva. ¡Gracias por entender!
+Sebas`},
+      {id:'mantencion', no:true, label:'🧹 Mantención / limpieza', text:`¡Hola [Nombre]! Gracias por escribir. En esas fechas el departamento está en mantención, por lo que no puedo recibirte. Si cambias de fechas, con gusto lo reviso 🙌
+Sebas`},
+      {id:'minimo', no:true, label:'🌙 Estadía muy corta', text:`¡Hola [Nombre]! Gracias por tu solicitud. Para esas fechas acepto estadías de mínimo [mín] noches. Si puedes extender, la reviso de inmediato. Saludos,
+Sebas`}
+    ];
+    let respSel = null;
+
+    function renderChips() {
+      const mk = (no) => RESP.filter(r => r.no === no).map(r =>
+        `<button class="chip ${no ? 'no' : ''} ${respSel === r.id ? 'on' : ''}" onclick="pickResp('${r.id}')">${r.label}</button>`).join('');
+      document.getElementById('chips-yes').innerHTML = mk(false);
+      document.getElementById('chips-no').innerHTML = mk(true);
+    }
+    function pickResp(id) { respSel = id; renderChips(); renderResp(true); }
+    function renderResp(force) {
+      if (!respSel) return;
+      const v = id => document.getElementById(id).value.trim();
+      const r = RESP.find(x => x.id === respSel);
+      const t = r.text
+        .replace(/\[Nombre\]/g, v('f-nombre') || '[Nombre]')
+        .replace(/\[fecha llegada\]/g, v('f-llegada') || '[fecha llegada]')
+        .replace(/\[fecha salida\]/g, v('f-salida') || '[fecha salida]')
+        .replace(/\[N\]/g, v('f-n') || '[N]')
+        .replace(/\[máx\]/g, v('f-max') || '2')
+        .replace(/\[mín\]/g, v('f-min') || '2');
+      document.getElementById('resp-out').value = t;
+    }
+    function copyResp() {
+      const v = document.getElementById('resp-out').value;
+      if (!v) return toast('Elige una respuesta primero');
+      navigator.clipboard.writeText(v).then(() => toast('¡Copiado! Pégalo en la app'));
+    }
+    function toast(m) {
+      const t = document.getElementById('toast'); t.textContent = m; t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 1800);
+    }
+
+    /* ---------- Conexión Gmail (Apps Script) ---------- */
+    const LS = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
+    const LSset = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
+    function setupConn() {
+      const url = prompt('Pega la URL de tu Apps Script (termina en /exec):', LS('amar_url') || '');
+      if (!url) return;
+      const tok = prompt('Pega tu TOKEN:', LS('amar_tok') || '');
+      if (tok === null) return;
+      LSset('amar_url', url.trim()); LSset('amar_tok', tok.trim());
+      loadReq();
+    }
+    function doneSet() { try { return JSON.parse(LS('amar_done') || '[]'); } catch (e) { return []; } }
+    function markDone(key) {
+      const d = doneSet(); if (d.indexOf(key) < 0) d.push(key);
+      LSset('amar_done', JSON.stringify(d)); loadReq(true);
+    }
+    function esc(s) { return String(s || '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+    function fillFromReq(guest, dates) {
+      document.getElementById('f-nombre').value = (guest || '').split(' ')[0];
+      const p = (dates || '').split(/\s[–-]\s/);
+      if (p.length === 2) {
+        const tail = p[1].replace(/^\d+\s*/, '');
+        document.getElementById('f-llegada').value = /^\d+$/.test(p[0].trim()) ? p[0].trim() + ' ' + tail : p[0];
+        document.getElementById('f-salida').value = p[1];
+      }
+      tabH({currentTarget: document.getElementById('tab-resp')}, 'sec-resp');
+      renderResp();
+    }
+    let LASTITEMS = [];
+    async function loadReq(skipFetch) {
+      const url = LS('amar_url'), tok = LS('amar_tok');
+      const box = document.getElementById('req-list');
+      if (!url || !tok) { box.innerHTML = '<p style="color:var(--muted); font-size:0.85rem">Sin conexión aún. Pulsa "Conectar".</p>'; return; }
+      try {
+        if (!skipFetch) {
+          box.innerHTML = '<p style="color:var(--muted)">Cargando…</p>';
+          const r = await fetch(url + '?token=' + encodeURIComponent(tok));
+          const j = await r.json();
+          if (j.error) throw new Error(j.error);
+          LASTITEMS = j.items;
+          document.getElementById('st-upd').textContent = new Date(j.generated).toLocaleTimeString('es-CL', {hour:'2-digit', minute:'2-digit'});
+        }
+        const done = doneSet();
+        const pend = LASTITEMS.filter(i => !i.replied && done.indexOf(i.key) < 0);
+        const pe = document.getElementById('st-pend');
+        pe.textContent = pend.length + (pend.length === 1 ? ' pendiente' : ' pendientes');
+        pe.style.color = pend.length ? '#f59e0b' : '#238636';
+        const l = LASTITEMS[0];
+        document.getElementById('st-last').textContent = l ? (l.guest || l.platform) + ' · ' + l.platform : '—';
+        box.innerHTML = LASTITEMS.length ? LASTITEMS.map(i => {
+          const isDone = i.replied || done.indexOf(i.key) > -1;
+          const d = new Date(i.date).toLocaleString('es-CL', {day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit'});
+          return `<div class="req ${isDone ? 'done' : ''}">
+            <div>
+              <div class="who"><span class="pill ${i.platform === 'Airbnb' ? 'air' : 'boo'}">${i.platform}</span>${esc(i.guest || 'Huésped')}</div>
+              <div class="meta">${esc(i.tipo)}${i.dates ? ' · ' + esc(i.dates) : ''}${i.conf ? ' · Conf. ' + esc(i.conf) : ''} · ${d}${isDone ? ' · ✔ atendida' : ''}</div>
+              <div class="snip">${esc(i.snippet.slice(0, 220))}…</div>
+            </div>
+            <div style="display:flex; gap:0.4rem; flex-wrap:wrap">
+              <button class="btn-copy" style="margin:0" onclick='fillFromReq(${JSON.stringify(i.guest)}, ${JSON.stringify(i.dates)})'>Responder</button>
+              <a class="btn-sec" style="text-decoration:none" href="${esc(i.link)}" target="_blank" rel="noopener">Abrir correo</a>
+              ${isDone ? '' : `<button class="btn-sec" onclick='markDone(${JSON.stringify(i.key)})'>✔ Atendida</button>`}
+            </div></div>`;
+        }).join('') : '<p style="color:var(--muted)">Sin solicitudes en los últimos 14 días.</p>';
+      } catch (e) {
+        box.innerHTML = '<p style="color:#f87171; font-size:0.85rem">No pude conectar: ' + esc(e.message) + '. Revisa URL y token con "Conectar".</p>';
+      }
+    }
+
+    renderChips();
+    loadReq();
 
     function calc() {
       const v = parseFloat(document.getElementById('valBase').value) || 0;
